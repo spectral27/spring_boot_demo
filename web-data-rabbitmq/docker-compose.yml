@@ -1,0 +1,53 @@
+version: "3.9"
+
+services:
+
+  mysqldatabase:
+    image: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: "root"
+      MYSQL_DATABASE: m_db
+    ports:
+      - 3306:3306
+    restart: always
+    volumes:
+      - ./d_mysql:/docker-entrypoint-initdb.d
+
+  postgresdatabase:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: "root"
+      POSTGRES_DB: p_db
+    ports:
+      - 5432:5432
+    restart: always
+    volumes:
+      - ./d_postgres:/docker-entrypoint-initdb.d
+
+  rabbitmessaging:
+    image: rabbitmq:management
+    ports:
+      - 5672:5672
+      - 15672:15672
+    restart: always
+
+  bay_01:
+    build:
+      context: ./bay_01
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysqldatabase:3306/m_db
+      SPRING_RABBITMQ_HOST: rabbitmessaging
+    ports:
+      - 8081:8081
+    restart: always
+
+  bay_02:
+    build:
+      context: ./bay_02
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgresdatabase:5432/p_db
+      SPRING_RABBITMQ_HOST: rabbitmessaging
+    ports:
+      - 8082:8082
+    restart: always
+
